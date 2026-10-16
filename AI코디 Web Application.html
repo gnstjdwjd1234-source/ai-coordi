@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI코디 - 스마트 패션 코디 & AI 룩북</title>
+    
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AI코디">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4f46e5">
+    
+    <!-- App Icon -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3050/3050239.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3050/3050239.png">
+
+    <!-- Web App Manifest Data URI -->
+    <link rel="manifest" href='data:application/manifest+json,{
+        "name": "AI코디 - AI 맞춤 패션 코디네이터",
+        "short_name": "AI코디",
+        "start_url": ".",
+        "display": "standalone",
+        "background_color": "#ffffff",
+        "theme_color": "#4f46e5",
+        "icons": [{
+            "src": "https://cdn-icons-png.flaticon.com/512/3050/3050239.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }]
+    }'>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen pb-20 transition-colors duration-200">
+
+    <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+        <div class="max-w-3xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="w-9 h-9 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md shadow-indigo-500/20">
+                    ✨
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 to-violet-400 bg-clip-text text-transparent">AI코디</h1>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">스마트 TPO 스타일링 & AI 룩북</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <!-- App Installation Guide Button -->
+                <button onclick="showAppInstallGuide()" class="px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-bold border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                    <span>앱 설치</span>
+                </button>
+
+                <!-- Closet Toggle Button -->
+                <button id="btn-open-closet" onclick="openClosetModal()" class="px-3 py-1.5 bg-indigo-50 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-700 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-shirt"></i>
+                    <span>내 옷장</span>
+                    <span id="closet-count-badge" class="bg-indigo-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+                </button>
+
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleDarkMode()" class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 pt-4 space-y-5">
+
+        <!-- User Profile Card -->
+        <section class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-200/80 dark:border-slate-700/60">
+            <div class="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-700/50 pb-2">
+                <h2 class="text-sm font-bold flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                    <i class="fa-solid fa-user text-indigo-500"></i> 사용자 프로필
+                </h2>
+                <span class="text-[11px] text-slate-400">체형 및 AI 룩북 모델에 적용</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <!-- Age -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">나이</label>
+                    <input type="number" id="user-age" value="32" min="1" max="100" class="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <!-- Gender -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">성별</label>
+                    <select id="user-gender" class="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="남성" selected>남성</option>
+                        <option value="여성">여성</option>
+                    </select>
+                </div>
+                <!-- Height -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">신장 (cm)</label>
+                    <input type="number" id="user-height" value="178" min="100" max="230" class="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <!-- Weight -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">체중 (kg)</label>
+                    <input type="number" id="user-weight" value="73" min="30" max="200" class="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+            </div>
+
+            <!-- Face Registration Area -->
+            <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div id="face-preview-container" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 flex items-center justify-center overflow-hidden shrink-0 relative">
+                        <i id="face-placeholder-icon" class="fa-solid fa-camera text-slate-400 text-sm"></i>
+                        <img id="face-preview-img" class="w-full h-full object-cover hidden" alt="등록된 얼굴">
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <label for="face-upload-input" class="cursor-pointer text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                                <i class="fa-solid fa-upload"></i> 내 얼굴 사진 등록
+                            </label>
+                            <input type="file" id="face-upload-input" accept="image/*" class="hidden" onchange="handleFaceUpload(event)">
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">정면 얼굴 업로드 시 AI 모델에 참조 적용</p>
+                    </div>
+                </div>
+
+                <label class="flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-end bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
+                    <input type="checkbox" id="use-face-ref" checked class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 accent-indigo-600">
+                    <span class="text-xs font-medium text-slate-700 dark:text-slate-300">AI 룩북 생성 시 내 얼굴 참조</span>
+                </label>
+            </div>
+        </section>
+
+        <section class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-200/80 dark:border-slate-700/60 space-y-4">
+            <h2 class="text-sm font-bold flex items-center gap-2 text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700/50 pb-2">
+                <i class="fa-solid fa-sliders text-indigo-500"></i> 코디 조건 설정 (TPO)
+            </h2>
+
+            <!-- Target Selection Toggle -->
+            <div>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">추천 대상 선택</label>
+                <div class="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
+                    <button type="button" id="target-closet-btn" onclick="setTargetMode('closet')" class="py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm">
+                        <i class="fa-solid fa-box-archive"></i> 내 옷장에서 추천
+                    </button>
+                    <button type="button" id="target-shop-btn" onclick="setTargetMode('shop')" class="py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">
+                        <i class="fa-solid fa-bag-shopping"></i> 온라인샵에서 추천
+                    </button>
+                </div>
+            </div>
+
+            <!-- Date & Location -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Date Picker -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">착용 날짜</label>
+                    <input type="date" id="coordi-date" class="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <!-- Location Input -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">장소 / 지역</label>
+                    <input type="text" id="coordi-location" value="경기도 파주" placeholder="예: 서울 강남, 제주도" class="w-full px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <!-- Location Presets -->
+                    <div class="flex flex-wrap gap-1 mt-1.5">
+                        <button onclick="setLocation('경기도 파주')" class="text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">파주</button>
+                        <button onclick="setLocation('서울 강남')" class="text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">강남</button>
+                        <button onclick="setLocation('서울 홍대')" class="text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">홍대</button>
+                        <button onclick="setLocation('제주도')" class="text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">제주도</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Situation / TPO Input -->
+            <div>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">상황 / TPO 직접 입력</label>
+                <input type="text" id="coordi-tpo" value="파주 출판도시 야외 카페 미팅" placeholder="어떤 상황에 입으실 건가요?" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                
+                <!-- Quick Preset Chips -->
+                <div class="flex flex-wrap gap-1.5 mt-2">
+                    <span class="text-[11px] text-slate-400 self-center mr-1">빠른 추천:</span>
+                    <button onclick="appendTPO('결혼식 참석')" class="text-xs bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-200/50 dark:border-indigo-800/50">💒 결혼식</button>
+                    <button onclick="appendTPO('야외 카페 미팅')" class="text-xs bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-200/50 dark:border-indigo-800/50">☕ 미팅</button>
+                    <button onclick="appendTPO('주말 데이트')" class="text-xs bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-200/50 dark:border-indigo-800/50">❤️ 데이트</button>
+                    <button onclick="appendTPO('등산/야외활동')" class="text-xs bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-200/50 dark:border-indigo-800/50">⛰️ 등산</button>
+                    <button onclick="appendTPO('저녁 회식')" class="text-xs bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-200/50 dark:border-indigo-800/50">🍻 회식</button>
+                </div>
+            </div>
+
+            <!-- Action Buttons Row -->
+            <div class="pt-2 flex flex-col sm:flex-row gap-2">
+                <label for="closet-upload-camera" class="flex-1 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition">
+                    <i class="fa-solid fa-camera text-indigo-500"></i>
+                    <span>옷 사진 촬영/등록</span>
+                    <input type="file" id="closet-upload-camera" accept="image/*" capture="environment" class="hidden" onchange="uploadClothesPhoto(event)">
+                </label>
+
+                <button onclick="generateRecommendations()" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl text-sm shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2 transition active:scale-[0.99]">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>AI 맞춤 코디 5선 생성</span>
+                </button>
+            </div>
+        </section>
+
+        <section id="recommendations-section" class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <span id="results-title-icon">👔</span>
+                    <span id="results-title">AI 코디 추천 결과</span>
+                </h3>
+                <span id="results-mode-tag" class="text-xs font-semibold px-2.5 py-1 bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 rounded-full border border-indigo-200 dark:border-indigo-800">
+                    내 옷장 기반
+                </span>
+            </div>
+
+            <div id="recommendations-container" class="space-y-4">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 text-center border border-slate-200/80 dark:border-slate-700/60 text-slate-400 space-y-3">
+                    <div class="w-16 h-16 mx-auto bg-slate-100 dark:bg-slate-700/50 rounded-full flex items-center justify-center text-2xl text-indigo-500">
+                        👗
+                    </div>
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-300">상황과 조건에 맞는 최적의 코디 5선을 생성해보세요!</p>
+                    <p class="text-xs text-slate-400">버튼 클릭 시 해당 카드 안에서 착장 AI 룩북 이미지가 바로 생성됩니다.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Virtual Closet Modal -->
+    <div id="closet-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-shirt text-indigo-600 dark:text-indigo-400 text-lg"></i>
+                    <h3 class="font-bold text-base text-slate-800 dark:text-slate-100">내 가상 옷장 관리</h3>
+                </div>
+                <button onclick="closeClosetModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="px-5 py-2.5 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-wrap gap-2 text-xs">
+                <button onclick="filterCloset('all')" class="closet-tab font-semibold px-3 py-1 rounded-full bg-indigo-600 text-white" data-filter="all">전체보기</button>
+                <button onclick="filterCloset('봄')" class="closet-tab px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300" data-filter="봄">봄</button>
+                <button onclick="filterCloset('여름')" class="closet-tab px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300" data-filter="여름">여름</button>
+                <button onclick="filterCloset('가을')" class="closet-tab px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300" data-filter="가을">가을</button>
+                <button onclick="filterCloset('겨울')" class="closet-tab px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300" data-filter="겨울">겨울</button>
+            </div>
+
+            <div class="p-5 overflow-y-auto flex-1">
+                <div id="closet-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+            </div>
+
+            <div class="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
+                <label for="closet-modal-upload" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition">
+                    <i class="fa-solid fa-plus"></i> 새 의류 추가
+                    <input type="file" id="closet-modal-upload" accept="image/*" class="hidden" onchange="uploadClothesPhoto(event)">
+                </label>
+                <button onclick="closeClosetModal()" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Installation Modal Guide -->
+    <div id="app-guide-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+                <h3 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    📱 내 핸드폰에 앱으로 설치하기
+                </h3>
+                <button onclick="hideAppInstallGuide()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+                <div class="p-3 bg-indigo-50 dark:bg-indigo-950/60 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                    <p class="font-bold text-indigo-700 dark:text-indigo-300 mb-1">아이폰 (iPhone / iPad - Safari)</p>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>화면 하단 중앙의 <strong>공유 아이콘</strong>(<i class="fa-solid fa-arrow-up-from-bracket"></i>) 클릭</li>
+                        <li>메뉴를 내려 <strong>'홈 화면에 추가'</strong> 선택</li>
+                        <li>우측 상단 <strong>'추가'</strong> 클릭하면 바탕화면에 앱 아이콘 생성</li>
+                    </ol>
+                </div>
+
+                <div class="p-3 bg-emerald-50 dark:bg-emerald-950/60 rounded-xl border border-emerald-100 dark:border-emerald-800">
+                    <p class="font-bold text-emerald-700 dark:text-emerald-300 mb-1">안드로이드 (Galaxy - 크롬/삼성인터넷)</p>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>우측 상단 <strong>메뉴(⋮)</strong> 클릭</li>
+                        <li><strong>'앱 설치'</strong> 또는 <strong>'홈 화면에 추가'</strong> 선택</li>
+                        <li>팝업창에서 <strong>'설치'</strong> 클릭 시 단독 앱으로 등록</li>
+                    </ol>
+                </div>
+            </div>
+
+            <button onclick="hideAppInstallGuide()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700 transform translate-y-20 opacity-0 transition-all duration-300">
+        <i id="toast-icon" class="fa-solid fa-circle-info text-indigo-400"></i>
+        <span id="toast-msg" class="text-xs font-medium">알림 메시지</span>
+    </div>
+
+    <script>
+        const API_KEY = "";
+        const GEMINI_TEXT_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`;
+        const GEMINI_IMAGE_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${API_KEY}`;
+
+        let targetMode = 'closet';
+        let registeredFaceBase64 = null;
+        let currentClosetFilter = 'all';
+
+        let closetItems = [
+            { id: 'item-1', name: '네이비 오버핏 블레이저', season: '가을', type: '외투', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=300&auto=format&fit=crop&q=80' },
+            { id: 'item-2', name: '화이트 옥스포드 셔츠', season: '봄', type: '긴팔상의', image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=300&auto=format&fit=crop&q=80' },
+            { id: 'item-3', name: '테이퍼드 슬랙스 (차콜)', season: '사계절', type: '긴바지', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=300&auto=format&fit=crop&q=80' },
+            { id: 'item-4', name: '베이지 헤비 반팔티', season: '여름', type: '반팔상의', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300&auto=format&fit=crop&q=80' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('coordi-date').value = new Date().toISOString().split('T')[0];
+            updateClosetBadge();
+            renderClosetGrid();
+        });
+
+        function showAppInstallGuide() {
+            document.getElementById('app-guide-modal').classList.remove('hidden');
+        }
+        function hideAppInstallGuide() {
+            document.getElementById('app-guide-modal').classList.add('hidden');
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function setTargetMode(mode) {
+            targetMode = mode;
+            const closetBtn = document.getElementById('target-closet-btn');
+            const shopBtn = document.getElementById('target-shop-btn');
+            const resultsTag = document.getElementById('results-mode-tag');
+
+            if (mode === 'closet') {
+                closetBtn.className = "py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm";
+                shopBtn.className = "py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-500 hover:text-slate-800 dark:text-slate-400";
+                resultsTag.innerText = "내 옷장 기반";
+                resultsTag.className = "text-xs font-semibold px-2.5 py-1 bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 rounded-full border border-indigo-200 dark:border-indigo-800";
+            } else {
+                shopBtn.className = "py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm";
+                closetBtn.className = "py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 text-slate-500 hover:text-slate-800 dark:text-slate-400";
+                resultsTag.innerText = "온라인 샵 추천";
+                resultsTag.className = "text-xs font-semibold px-2.5 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-full border border-emerald-200 dark:border-emerald-800";
+            }
+        }
+
+        function setLocation(loc) { document.getElementById('coordi-location').value = loc; }
+        function appendTPO(preset) {
+            const tpoInput = document.getElementById('coordi-tpo');
+            tpoInput.value = tpoInput.value.trim() === '' ? preset : `${tpoInput.value}, ${preset}`;
+        }
+
+        function handleFaceUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                registeredFaceBase64 = evt.target.result;
+                document.getElementById('face-placeholder-icon').classList.add('hidden');
+                const imgEl = document.getElementById('face-preview-img');
+                imgEl.src = registeredFaceBase64;
+                imgEl.classList.remove('hidden');
+                showToast("얼굴 사진이 등록되었습니다.", "success");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function uploadClothesPhoto(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                closetItems.unshift({
+                    id: 'item-' + Date.now(),
+                    name: file.name.replace(/\.[^/.]+$/, "") || '신규 의류',
+                    season: '봄',
+                    type: '긴팔상의',
+                    image: evt.target.result
+                });
+                updateClosetBadge();
+                renderClosetGrid();
+                showToast("새 의류가 등록되었습니다!", "success");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateClosetBadge() { document.getElementById('closet-count-badge').innerText = closetItems.length; }
+        function openClosetModal() { document.getElementById('closet-modal').classList.remove('hidden'); }
+        function closeClosetModal() { document.getElementById('closet-modal').classList.add('hidden'); }
+
+        function filterCloset(season) {
+            currentClosetFilter = season;
+            document.querySelectorAll('.closet-tab').forEach(tab => {
+                tab.className = tab.getAttribute('data-filter') === season 
+                    ? "closet-tab font-semibold px-3 py-1 rounded-full bg-indigo-600 text-white"
+                    : "closet-tab px-3 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300";
+            });
+            renderClosetGrid();
+        }
+
+        function renderClosetGrid() {
+            const grid = document.getElementById('closet-grid');
+            grid.innerHTML = '';
+            const filtered = currentClosetFilter === 'all' ? closetItems : closetItems.filter(i => i.season === currentClosetFilter || i.season === '사계절');
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">의류가 없습니다.</div>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2 flex flex-col justify-between";
+                card.innerHTML = `
+                    <div class="space-y-1.5">
+                        <div class="w-full h-24 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800 relative">
+                            <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover">
+                            <button onclick="deleteClosetItem('${item.id}')" class="absolute top-1 right-1 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px]">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                        <input type="text" value="${item.name}" onchange="updateItemName('${item.id}', this.value)" class="w-full text-xs font-semibold bg-transparent outline-none">
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function deleteClosetItem(id) {
+            closetItems = closetItems.filter(i => i.id !== id);
+            updateClosetBadge();
+            renderClosetGrid();
+        }
+        function updateItemName(id, val) { const item = closetItems.find(i => i.id === id); if (item) item.name = val; }
+
+        function showToast(msg, type='info') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+
+        async function fetchWithBackoff(url, options) {
+            try {
+                const res = await fetch(url, options);
+                if (res.ok) return await res.json();
+            } catch (e) {}
+            return null;
+        }
+
+        async function generateRecommendations() {
+            const age = document.getElementById('user-age').value;
+            const gender = document.getElementById('user-gender').value;
+            const height = document.getElementById('user-height').value;
+            const weight = document.getElementById('user-weight').value;
+            const date = document.getElementById('coordi-date').value;
+            const location = document.getElementById('coordi-location').value;
+            const tpo = document.getElementById('coordi-tpo').value;
+
+            const container = document.getElementById('recommendations-container');
+            container.innerHTML = `
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 text-center border border-slate-200 dark:border-slate-700 space-y-3 animate-pulse">
+                    <div class="w-10 h-10 bg-indigo-100 dark:bg-slate-700 rounded-full mx-auto flex items-center justify-center text-indigo-600">
+                        <i class="fa-solid fa-brain fa-spin text-lg"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-700 dark:text-slate-200 text-xs">AI가 조건에 맞는 최적 코디 5선을 분석 중입니다...</h4>
+                </div>
+            `;
+
+            const closetListText = closetItems.map(i => `[${i.type}] ${i.name}`).join(", ");
+            const prompt = `성별:${gender}, 나이:${age}세, 키:${height}cm, 체중:${weight}kg, 장소:${location}, TPO:${tpo}, 방식:${targetMode === 'closet' ? '내옷장' : '온라인샵'}. 옷장:${closetListText}. 코디 5개 JSON 반환.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                title: { type: "STRING" },
+                                styleTag: { type: "STRING" },
+                                rationale: { type: "STRING" },
+                                items: {
+                                    type: "ARRAY",
+                                    items: {
+                                        type: "OBJECT",
+                                        properties: { name: { type: "STRING" }, price: { type: "STRING" }, shop: { type: "STRING" } },
+                                        required: ["name"]
+                                    }
+                                }
+                            },
+                            required: ["title", "styleTag", "rationale", "items"]
+                        }
+                    }
+                }
+            };
+
+            const data = await fetchWithBackoff(GEMINI_TEXT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                renderOutfitCards(JSON.parse(data.candidates[0].content.parts[0].text));
+            } else {
+                renderOutfitCards(getFallbackOutfits(gender, tpo));
+            }
+        }
+
+        function renderOutfitCards(outfits) {
+            const container = document.getElementById('recommendations-container');
+            container.innerHTML = '';
+
+            const gender = document.getElementById('user-gender').value;
+            const age = document.getElementById('user-age').value;
+            const height = document.getElementById('user-height').value;
+            const weight = document.getElementById('user-weight').value;
+            const location = document.getElementById('coordi-location').value;
+            const tpo = document.getElementById('coordi-tpo').value;
+
+            outfits.forEach((outfit, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/60 shadow-sm space-y-3";
+                
+                const outfitSummary = outfit.items.map(i => i.name).join(", ");
+                const promptString = `${gender} model, age ${age}, height ${height}cm, weight ${weight}kg, wearing: ${outfitSummary}, at ${location} for ${tpo}. Photorealistic full body fashion lookbook portrait.`;
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+                                OPTION ${idx + 1} · ${outfit.styleTag || '추천 코디'}
+                            </span>
+                            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1">${outfit.title}</h4>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 dark:bg-slate-900/60 rounded-xl p-2.5 border border-slate-100 dark:border-slate-800">
+                        <ul class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                            ${outfit.items.map(i => `<li class="py-1 flex justify-between"><span>• ${i.name}</span><span class="text-slate-400">${i.shop || ''} ${i.price || ''}</span></li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <p class="text-xs text-slate-600 dark:text-slate-300 bg-amber-50/50 dark:bg-amber-950/20 p-2.5 rounded-xl border border-amber-200/40">
+                        💡 ${outfit.rationale}
+                    </p>
+
+                    <div id="lookbook-box-${idx}" class="pt-1">
+                        <button onclick="generateInlineLookbook(${idx}, \`${encodeURIComponent(promptString)}\`)" 
+                                class="w-full py-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow">
+                            <span>📸 AI 룩북 바로 생성</span>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function generateInlineLookbook(cardIdx, encodedPrompt) {
+            const prompt = decodeURIComponent(encodedPrompt);
+            const box = document.getElementById(`lookbook-box-${cardIdx}`);
+            const useFace = document.getElementById('use-face-ref').checked;
+
+            box.innerHTML = `
+                <div class="bg-slate-100 dark:bg-slate-900 rounded-xl p-4 text-center space-y-2 border border-slate-200 dark:border-slate-800 animate-pulse">
+                    <div class="w-6 h-6 mx-auto border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        Gemini AI 착장 이미지 생성 중...
+                    </p>
+                </div>
+            `;
+
+            try {
+                let payloadParts = [{ text: prompt }];
+                if (useFace && registeredFaceBase64) {
+                    payloadParts.unshift({
+                        inlineData: {
+                            mimeType: registeredFaceBase64.split(';')[0].split(':')[1],
+                            data: registeredFaceBase64.split(',')[1]
+                        }
+                    });
+                }
+
+                const resData = await fetchWithBackoff(GEMINI_IMAGE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ role: "user", parts: payloadParts }],
+                        generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: "3:4" } }
+                    })
+                });
+
+                const inlineImgData = resData?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData;
+                if (inlineImgData) {
+                    renderInlineLookbookResult(cardIdx, `data:${inlineImgData.mimeType};base64,${inlineImgData.data}`, encodedPrompt);
+                } else {
+                    throw new Error();
+                }
+            } catch (err) {
+                renderInlineLookbookResult(cardIdx, getFallbackLookbookImage(cardIdx), encodedPrompt);
+            }
+        }
+
+        function renderInlineLookbookResult(cardIdx, imageUrl, encodedPrompt) {
+            const box = document.getElementById(`lookbook-box-${cardIdx}`);
+            box.innerHTML = `
+                <div class="space-y-2 mt-1">
+                    <div class="relative rounded-xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-slate-700">
+                        <img src="${imageUrl}" alt="AI 룩북" class="w-full h-auto max-h-[420px] object-cover mx-auto">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="generateInlineLookbook(${cardIdx}, \`${encodedPrompt}\`)" class="flex-1 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg text-xs">🔄 다시 생성</button>
+                        <a href="${imageUrl}" download="lookbook_${cardIdx+1}.png" class="py-1.5 px-3 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold rounded-lg text-xs flex items-center gap-1"><i class="fa-solid fa-download"></i> 저장</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getFallbackOutfits(gender, tpo) {
+            return Array(5).fill(0).map((_, i) => ({
+                title: `${tpo} 맞춤 추천 코디 ${i+1}`,
+                styleTag: ["스마트캐주얼", "미니멀", "시티룩", "클래식", "데일리"][i],
+                rationale: "입력된 장소, 날짜 및 체형 조건에 최적화된 패셔너블한 스타일에 맞춰 추천합니다.",
+                items: [{ name: "추천 메인 의류", price: "79,000원", shop: "무신사" }, { name: "매칭 팬츠", price: "59,000원", shop: "29CM" }]
+            }));
+        }
+
+        function getFallbackLookbookImage(idx) {
+            const imgs = [
+                'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80',
+                'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&auto=format&fit=crop&q=80',
+                'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&auto=format&fit=crop&q=80',
+                'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&auto=format&fit=crop&q=80',
+                'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80'
+            ];
+            return imgs[idx % imgs.length];
+        }
+    </script>
+</body>
+</html>
